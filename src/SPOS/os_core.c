@@ -11,7 +11,7 @@
 void os_initScheduler(void);
 
 // variable for saving the original MCUSR so that we can examine it later
-uint8_t savedMCUSR __attribute__ ((section (".noinit")));
+uint8_t savedMCUSR __attribute__((section(".noinit")));
 
 /*! \file
  *
@@ -25,7 +25,7 @@ uint8_t savedMCUSR __attribute__ ((section (".noinit")));
  * run-time errors. This check is supposed to remind you on that.
  */
 #ifndef __OPTIMIZE__
-    #warning "Compiler optimizations disabled; SPOS and Testtasks may not work properly."
+#warning "Compiler optimizations disabled; SPOS and Testtasks may not work properly."
 #endif
 
 /*!
@@ -34,7 +34,8 @@ uint8_t savedMCUSR __attribute__ ((section (".noinit")));
  *   - Disabling the watchdog timer in case it is enabled to keep the controller usable
  */
 void os_preInit(void) __attribute__((naked)) __attribute__((section(".init3")));
-void os_preInit(void) {
+void os_preInit(void)
+{
     savedMCUSR = MCUSR;
     MCUSR = 0; // reset the register
 
@@ -44,34 +45,42 @@ void os_preInit(void) {
 /*!
  *  Examines the saved MCU status register and possibly prints an error if the reset source is not allowed
  */
-void os_checkResetSource(uint8_t allowedSources) {
+void os_checkResetSource(uint8_t allowedSources)
+{
     lcd_line2();
     // JTag reset Register only set when AVR_Reset is recieved
-    if (gbi(savedMCUSR, JTRF)) {
+    if (gbi(savedMCUSR, JTRF))
+    {
         lcd_writeProgString(PSTR("JT "));
     }
     // Watchdog reset register
-    if (gbi(savedMCUSR, WDRF)) {
+    if (gbi(savedMCUSR, WDRF))
+    {
         lcd_writeProgString(PSTR("WATCHDOG "));
     }
     // Brown out detection register
-    if (gbi(savedMCUSR, BORF)) {
+    if (gbi(savedMCUSR, BORF))
+    {
         lcd_writeProgString(PSTR("BO "));
     }
     // External reset register (external reset button pressed)
-    if (gbi(savedMCUSR, EXTRF)) {
+    if (gbi(savedMCUSR, EXTRF))
+    {
         lcd_writeProgString(PSTR("EXT "));
     }
     // Power reset register mains power failed
-    if (gbi(savedMCUSR, PORF)) {
+    if (gbi(savedMCUSR, PORF))
+    {
         lcd_writeProgString(PSTR("POW"));
     }
     // The absence of a reset source indicates a software jump to the reset address
-    if (!savedMCUSR) {
+    if (!savedMCUSR)
+    {
         lcd_writeProgString(PSTR("SOFT RESET"));
     }
     // Check if the reset source is allowed
-    if (!(savedMCUSR & allowedSources)) {
+    if (!(savedMCUSR & allowedSources))
+    {
         lcd_line1();
         lcd_writeProgString(PSTR("SYSTEM ERROR:   "));
         // not allowed sources must be confirmed by the user
@@ -83,13 +92,14 @@ void os_checkResetSource(uint8_t allowedSources) {
 /*!
  *  Initializes the used timers.
  */
-void os_init_timer(void) {
+void os_init_timer(void)
+{
     // Init timer 2 (Scheduler)
     sbi(TCCR2A, WGM21); // Clear on timer compare match
 
-    sbi(TCCR2B, CS22); // Prescaler 1024  1
-    sbi(TCCR2B, CS21); // Prescaler 1024  1
-    sbi(TCCR2B, CS20); // Prescaler 1024  1
+    sbi(TCCR2B, CS22);   // Prescaler 1024  1
+    sbi(TCCR2B, CS21);   // Prescaler 1024  1
+    sbi(TCCR2B, CS20);   // Prescaler 1024  1
     sbi(TIMSK2, OCIE2A); // Enable interrupt
     OCR2A = 60;
 
@@ -105,7 +115,8 @@ void os_init_timer(void) {
  *  Readies stack, scheduler and heap for first use. Additionally, the LCD is initialized. In order to do those tasks,
  *  it calls the sub function os_initScheduler().
  */
-void os_init(void) {
+void os_init(void)
+{
     // Init timer 0 and 2
     os_init_timer();
 
@@ -131,6 +142,31 @@ void os_init(void) {
  *
  *  \param str  The error to be displayed
  */
-void os_errorPStr(char const* str) {
-    #warning IMPLEMENT STH. HERE
+void os_errorPStr(char const *str)
+{
+    const uint8_t ENTER_bit = 0b00000001;
+    const uint8_t ESC_bit = 0b00000010;
+
+    // Disable interrupts by disabling MSB of SREG (7. bit)
+    SREG &= 0x10111111;
+
+    lcd_clear();
+    lcd_writeErrorProgString(str);
+
+    os_waitForCertainInput(ENTER_bit | ESC_bit);
+
+    os_waitForNoInput();
+    os_reset();
+}
+
+void os_reset(void)
+{
+    // Give the operating system a chance to initialize its private data.
+    // This also registers and starts the idle program.
+    os_init();
+
+    // os_init shows a boot message
+    // Wait and clear the LCD
+    delayMs(600);
+    lcd_clear();
 }
