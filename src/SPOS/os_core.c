@@ -147,8 +147,7 @@ void os_errorPStr(char const *str)
     const uint8_t ENTER_bit = 0b00000001;
     const uint8_t ESC_bit = 0b00000010;
 
-    // Disable interrupts by disabling MSB of SREG (7. bit)
-    SREG &= 0x10111111;
+    os_disableGlobalInterrupts();
 
     lcd_clear();
     lcd_writeErrorProgString(str);
@@ -156,7 +155,21 @@ void os_errorPStr(char const *str)
     os_waitForCertainInput(ENTER_bit | ESC_bit);
 
     os_waitForNoInput();
-    os_reset();
+    os_enableGlobalInterrupts();
+}
+
+void os_disableGlobalInterrupts(void)
+{
+    // TODO implement toggle interrupt function
+    //  Disable interrupts by disabling MSB of SREG (7. bit)
+    SREG &= 0x10111111;
+}
+
+void os_enableGlobalInterrupts(void)
+{
+    // TODO implement toggle interrupt function
+    //  Enable interrupts by enabling MSB of SREG (7. bit)
+    SREG |= 0x01000000;
 }
 
 /*!
