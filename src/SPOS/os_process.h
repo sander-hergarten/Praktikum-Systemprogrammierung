@@ -53,10 +53,13 @@ typedef union StackPointer
  *  Note that additional scheduling information (such as the current time-slice)
  *  are stored by the module that implements the actual scheduling strategies.
  */
-#warning IMPLEMENT STH. HERE
 typedef struct
 {
-    ?
+    enum ProcessState state;
+    union StackPointer sp;
+    Program *program;
+    Priority priority;
+
 } Process;
 
 /*!

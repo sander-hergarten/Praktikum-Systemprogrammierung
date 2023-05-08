@@ -144,10 +144,10 @@ void os_init(void)
  */
 void os_errorPStr(char const *str)
 {
+    os_disableGlobalInterrupts();
+
     const uint8_t ENTER_bit = 0b00000001;
     const uint8_t ESC_bit = 0b00000010;
-
-    os_disableGlobalInterrupts();
 
     lcd_clear();
     lcd_writeErrorProgString(str);
