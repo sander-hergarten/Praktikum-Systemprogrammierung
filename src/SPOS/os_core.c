@@ -159,6 +159,9 @@ void os_errorPStr(char const *str)
     os_reset();
 }
 
+/*!
+ * Resets the OS
+ */
 void os_reset(void)
 {
     // Give the operating system a chance to initialize its private data.
