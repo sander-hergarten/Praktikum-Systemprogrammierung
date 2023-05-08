@@ -29,4 +29,10 @@ void os_waitForNoInput(void);
 //! Waits for at least one button to be pressed
 void os_waitForInput(void);
 
+//! Waits for at least one button to be pressed or a timeout to occur
+void os_waitForInputOrTimeout(uint16_t timeout);
+
+//! Waits for a certain input to be pressed
+void os_waitForCertainInput(uint8_t input);
+
 #endif
