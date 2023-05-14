@@ -19,7 +19,6 @@
 typedef ? ProcessID;
 
 //! This is the type of a program function (not the pointer to one!).
-#warning IMPLEMENT STH. HERE
 typedef void Program(void);
 
 //! The type of the priority of a process.

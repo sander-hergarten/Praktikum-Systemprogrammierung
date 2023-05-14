@@ -162,14 +162,14 @@ void os_disableGlobalInterrupts(void)
 {
     // TODO implement toggle interrupt function
     //  Disable interrupts by disabling MSB of SREG (7. bit)
-    SREG &= 0x10111111;
+    SREG &= 0x01111111;
 }
 
 void os_enableGlobalInterrupts(void)
 {
     // TODO implement toggle interrupt function
     //  Enable interrupts by enabling MSB of SREG (7. bit)
-    SREG |= 0x01000000;
+    SREG |= 0x10000000;
 }
 
 /*!

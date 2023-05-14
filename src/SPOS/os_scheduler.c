@@ -28,6 +28,10 @@
 // Globals
 //----------------------------------------------------------------------------
 
+// ? should this be a tree?
+Process os_processes[MAX_NUMBER_OF_PROCESSES];
+ProcessID currentProc;
+
 //! Array of states for every possible process
 #warning IMPLEMENT STH. HERE
 
@@ -39,17 +43,18 @@
 //----------------------------------------------------------------------------
 
 //! Currently active scheduling strategy
-#warning IMPLEMENT STH. HERE
+SchedulingStrategy currentStrategy;
 
 //! Count of currently nested critical sections
-#warning IMPLEMENT STH. HERE
+uint32_t criticalSectionCount = 0;
 
 //----------------------------------------------------------------------------
 // Private function declarations
 //----------------------------------------------------------------------------
 
 //! ISR for timer compare match (scheduler)
-ISR(TIMER2_COMPA_vect) __attribute__((naked));
+ISR(TIMER2_COMPA_vect)
+__attribute__((naked));
 
 //----------------------------------------------------------------------------
 // Function definitions
@@ -63,16 +68,30 @@ ISR(TIMER2_COMPA_vect) __attribute__((naked));
  *  scheduler restores the next process for execution and releases control over
  *  the processor to that process.
  */
-ISR(TIMER2_COMPA_vect) {
-    #warning IMPLEMENT STH. HERE
+ISR(TIMER2_COMPA_vect)
+{
+    saveContext();
+    os_processes[os_getCurrentProc()]->sp = SP;
+    // TODO Setzen des SP-Registers auf den Scheduler stack
+    os_processes[os_getCurrentProc()]->state = OS_PS_READY;
+
+    currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
+
+    os_processes[currentProc]->state = OS_PS_RUNNING;
+    SP = os_processes[currentProc]->sp;
+    restoreContext()
 }
 
 /*!
  *  This is the idle program. The idle process owns all the memory
  *  and processor time no other process wants to have.
  */
-void idle(void) {
-    #warning IMPLEMENT STH. HERE
+void idle(void)
+{
+    lcd_clear();
+    lcd_writeProgString(PSTR("...."));
+    delayMs(DEFAULT_OUTPUT_DELAY);
+    break;
 }
 
 /*!
@@ -91,8 +110,32 @@ void idle(void) {
  *  \return The index of the new process or INVALID_PROCESS as specified in
  *          defines.h on failure
  */
-ProcessID os_exec(Program *program, Priority priority) {
-    #warning IMPLEMENT STH. HERE
+ProcessID os_exec(Program *program, Priority priority)
+{
+    uint16_t index = 0;
+    do
+    {
+        Process *element = os_processes[index];
+        index += 1;
+    } while (sizeof(&element) >= 0 && index <= MAX_NUMBER_OF_PROCESSES);
+    if (index > MAX_NUMBER_OF_PROCESSES)
+    {
+        return INVALID_PROCESS;
+    }
+
+    // Check programpointer validity
+    if (program == NULL)
+    {
+        return INVALID_PROCESS;
+    }
+
+    element->program = program;
+    element->priority = priority;
+    element->state = OS_PS_READY;
+    element->sp = PROCESS_STACK_BOTTOM(index);
+    // TODO: Processstack vorbereiten
+
+    return index;
 }
 
 /*!
@@ -100,16 +143,28 @@ ProcessID os_exec(Program *program, Priority priority) {
  *  function to start the idle program and the concurrent execution of the
  *  applications.
  */
-void os_startScheduler(void) {
-    #warning IMPLEMENT STH. HERE
+void os_startScheduler(void)
+{
+    currentProc = 0;
+    os_processes[currentProc]->state = OS_PS_RUNNING;
+    SP = os_processes[currentProc]->sp;
+    restoreContext();
 }
 
 /*!
  *  In order for the Scheduler to work properly, it must have the chance to
  *  initialize its internal data-structures and register.
  */
-void os_initScheduler(void) {
-    #warning IMPLEMENT STH. HERE
+void os_initScheduler(void)
+{
+    // TODO: idle process in slot 0 and not in autostart_head
+    // loop through autostart list
+    ProcessID pid;
+    for (Program *node = autostart_head; node != NULL; node = node->next)
+    {
+        pid = os_exec(node, DEFAULT_PRIORITY);
+        os_processes[pid]->state = OS_PS_READY;
+    }
 }
 
 /*!
@@ -118,7 +173,8 @@ void os_initScheduler(void) {
  *  \param pid The processID of the process to be handled
  *  \return A pointer to the memory of the process at position pid in the os_processes array.
  */
-Process* os_getProcessSlot(ProcessID pid) {
+Process *os_getProcessSlot(ProcessID pid)
+{
     return os_processes + pid;
 }
 
@@ -127,8 +183,9 @@ Process* os_getProcessSlot(ProcessID pid) {
  *
  *  \return The process id of the currently active process.
  */
-ProcessID os_getCurrentProc(void) {
-    #warning IMPLEMENT STH. HERE
+ProcessID os_getCurrentProc(void)
+{
+    return currentProc;
 }
 
 /*!
@@ -136,8 +193,10 @@ ProcessID os_getCurrentProc(void) {
  *
  *  \param strategy The strategy that will be used after the function finishes.
  */
-void os_setSchedulingStrategy(SchedulingStrategy strategy) {
-    #warning IMPLEMENT STH. HERE
+void os_setSchedulingStrategy(SchedulingStrategy strategy)
+{
+    currentStrategy = strategy;
+    os_resetSchedulingInformation(strategy);
 }
 
 /*!
@@ -145,8 +204,9 @@ void os_setSchedulingStrategy(SchedulingStrategy strategy) {
  *
  *  \return The current scheduling strategy.
  */
-SchedulingStrategy os_getSchedulingStrategy(void) {
-    #warning IMPLEMENT STH. HERE
+SchedulingStrategy os_getSchedulingStrategy(void)
+{
+    return currentStrategy;
 }
 
 /*!
@@ -156,8 +216,9 @@ SchedulingStrategy os_getSchedulingStrategy(void) {
  *  critical section) to ensure correct behaviour when leaving the section.
  *  This function supports up to 255 nested critical sections.
  */
-void os_enterCriticalSection(void) {
-    #warning IMPLEMENT STH. HERE
+void os_enterCriticalSection(void)
+{
+    uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
 }
 
 /*!
@@ -166,8 +227,8 @@ void os_enterCriticalSection(void) {
  *  stored by os_enterCriticalSection to check if the scheduler
  *  has to be reactivated.
  */
-void os_leaveCriticalSection(void) {
-    #warning IMPLEMENT STH. HERE
+void os_leaveCriticalSection(void){
+#warning IMPLEMENT STH. HERE
 }
 
 /*!
@@ -176,6 +237,7 @@ void os_leaveCriticalSection(void) {
  *  \param pid The ID of the process for which the stack's checksum has to be calculated.
  *  \return The checksum of the pid'th stack.
  */
-StackChecksum os_getStackChecksum(ProcessID pid) {
-    #warning IMPLEMENT STH. HERE
+StackChecksum os_getStackChecksum(ProcessID pid)
+{
+#warning IMPLEMENT STH. HERE
 }

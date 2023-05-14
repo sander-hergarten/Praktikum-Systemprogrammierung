@@ -1,5 +1,4 @@
 #include <stddef.h>
-
 #include "os_process.h"
 
 struct program_linked_list_node *autostart_head = NULL;
@@ -10,8 +9,10 @@ struct program_linked_list_node *autostart_head = NULL;
  *  \param process A pointer on the process
  *  \return The state of the process, 1 if it is ready or running, 0 otherwise
  */
-bool os_isRunnable(Process const* process) {
-    if (process && (process->state == OS_PS_READY || process->state == OS_PS_RUNNING)) {
+bool os_isRunnable(Process const *process)
+{
+    if (process && (process->state == OS_PS_READY || process->state == OS_PS_RUNNING))
+    {
         return true;
     }
 
