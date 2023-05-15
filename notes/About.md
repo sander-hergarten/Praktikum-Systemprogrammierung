@@ -1,0 +1,1 @@
+This is an Obsidian MD notebook to document and track all notes
