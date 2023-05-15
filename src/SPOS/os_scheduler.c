@@ -144,7 +144,9 @@ ProcessID os_exec(Program *program, Priority priority)
     element->sp = PROCESS_STACK_BOTTOM(index);
     // TODO: Processstack vorbereiten
 
-    return index;
+    os_leaveCriticalSection()
+
+        return index;
 }
 
 /*!
@@ -246,7 +248,6 @@ void os_leaveCriticalSection(void)
     if (criticalSectionCount <= 0)
     {
         criticalSectionCount = 0;
-#warning NO CRITICAL SECTION ACTIVE
         return
     }
     uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
@@ -268,5 +269,8 @@ void os_leaveCriticalSection(void)
  */
 StackChecksum os_getStackChecksum(ProcessID pid)
 {
-#warning IMPLEMENT STH. HERE
+    Process *process = os_getProcessSlot(pid);
+    StackChecksum checksum = process->checksum
+                             // TODO: get processesstack
+                             return checksum
 }

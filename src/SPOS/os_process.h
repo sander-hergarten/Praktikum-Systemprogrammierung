@@ -58,6 +58,7 @@ typedef struct
     union StackPointer sp;
     Program *program;
     Priority priority;
+    StackChecksum checksum;
 
 } Process;
 
