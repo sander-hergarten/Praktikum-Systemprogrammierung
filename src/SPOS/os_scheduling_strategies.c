@@ -12,9 +12,10 @@ The file contains five strategies:
 */
 
 #include "os_scheduling_strategies.h"
-#include "defines.h"
 
 #include <stdlib.h>
+
+#include "defines.h"
 
 /*!
  *  Reset the scheduling information for a specific strategy
@@ -23,8 +24,7 @@ The file contains five strategies:
  *
  *  \param strategy  The strategy to reset information for
  */
-void os_resetSchedulingInformation(SchedulingStrategy strategy)
-{
+void os_resetSchedulingInformation(SchedulingStrategy strategy) {
     // This is a presence task
 }
 
@@ -35,8 +35,7 @@ void os_resetSchedulingInformation(SchedulingStrategy strategy)
  *
  *  \param id  The process slot to erase state for
  */
-void os_resetProcessSchedulingInformation(ProcessID id)
-{
+void os_resetProcessSchedulingInformation(ProcessID id) {
     // This is a presence task
 }
 
@@ -62,18 +61,15 @@ ProcessID os_Scheduler_Even(Process const processes[], ProcessID current){
  *  \param current The id of the current process.
  *  \return The next process to be executed determined on the basis of the random strategy.
  */
-ProcessID os_Scheduler_Random(Process const processes[], ProcessID current)
-{
+ProcessID os_Scheduler_Random(Process const processes[], ProcessID current) {
     // TODO: REFACTOR
     uint16_t found = 0;
     ProcessID result;
 
     int randomnumber = rand() % MAX_NUMBER_OF_PROCESSES;
 
-    for (ProcessID i = 0; found < randomnumber; i++)
-    {
-        if (processes[i].state != OS_PS_READY)
-        {
+    for (ProcessID i = 0; found < randomnumber; i++) {
+        if (processes[i].state != OS_PS_READY) {
             continue;
         }
 
@@ -81,30 +77,23 @@ ProcessID os_Scheduler_Random(Process const processes[], ProcessID current)
         result = i;
     }
 
-    if (result == 0)
-    {
+    if (result == 0) {
         result = find_next_ready_process(processes, result, 1);
     }
 
     return result;
 }
 
-ProcessID find_next_ready_process(Process const processes[], ProcessID current, int direction)
-{
+ProcessID find_next_ready_process(Process const processes[], ProcessID current, int direction) {
     ProcessID result = current;
-    for (ProcessID i = current + direction; i != current; i += direction)
-    {
-        if (i >= MAX_NUMBER_OF_PROCESSES)
-        {
+    for (ProcessID i = current + direction; i != current; i += direction) {
+        if (i >= MAX_NUMBER_OF_PROCESSES) {
             i = 0;
-        }
-        else if (i < 0)
-        {
+        } else if (i < 0) {
             i = MAX_NUMBER_OF_PROCESSES - 1;
         }
 
-        if (processes[i].state == OS_PS_READY)
-        {
+        if (processes[i].state == OS_PS_READY) {
             result = i;
             break;
         }
@@ -124,8 +113,7 @@ ProcessID find_next_ready_process(Process const processes[], ProcessID current, 
  *  \param current The id of the current process.
  *  \return The next process to be executed determined on the basis of the round robin strategy.
  */
-ProcessID os_Scheduler_RoundRobin(Process const processes[], ProcessID current)
-{
+ProcessID os_Scheduler_RoundRobin(Process const processes[], ProcessID current) {
     // This is a presence task
     return 0;
 }
@@ -141,8 +129,7 @@ ProcessID os_Scheduler_RoundRobin(Process const processes[], ProcessID current)
  *  \param current The id of the current process.
  *  \return The next process to be executed, determined based on the inactive-aging strategy.
  */
-ProcessID os_Scheduler_InactiveAging(Process const processes[], ProcessID current)
-{
+ProcessID os_Scheduler_InactiveAging(Process const processes[], ProcessID current) {
     // This is a presence task
     return 0;
 }
@@ -156,8 +143,7 @@ ProcessID os_Scheduler_InactiveAging(Process const processes[], ProcessID curren
  *  \param current The id of the current process.
  *  \return The next process to be executed, determined based on the run-to-completion strategy.
  */
-ProcessID os_Scheduler_RunToCompletion(Process const processes[], ProcessID current)
-{
+ProcessID os_Scheduler_RunToCompletion(Process const processes[], ProcessID current) {
     // This is a presence task
     return 0;
 }

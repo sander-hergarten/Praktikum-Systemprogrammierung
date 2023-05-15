@@ -10,15 +10,16 @@
  */
 
 #include "os_scheduler.h"
-#include "util.h"
-#include "os_input.h"
-#include "os_scheduling_strategies.h"
-#include "os_taskman.h"
-#include "os_core.h"
-#include "lcd.h"
 
 #include <avr/interrupt.h>
 #include <stdbool.h>
+
+#include "lcd.h"
+#include "os_core.h"
+#include "os_input.h"
+#include "os_scheduling_strategies.h"
+#include "os_taskman.h"
+#include "util.h"
 
 //----------------------------------------------------------------------------
 // Private Types
@@ -67,8 +68,7 @@ __attribute__((naked));
  *  scheduler restores the next process for execution and releases control over
  *  the processor to that process.
  */
-ISR(TIMER2_COMPA_vect)
-{
+ISR(TIMER2_COMPA_vect) {
     saveContext();
     os_processes[os_getCurrentProc()]->sp = SP;
     // TODO Setzen des SP-Registers auf den Scheduler stack
@@ -76,17 +76,22 @@ ISR(TIMER2_COMPA_vect)
 
     currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
 
-    os_processes[currentProc]->state = OS_PS_RUNNING;
     SP = os_processes[currentProc]->sp;
-    restoreContext()
+    if (os_getInput() == 0b00001000 | 0b00000001) {
+        os_waitForNoInput();
+        os_taskManOpen();
+    }
+
+    os_processes[currentProc]->state = OS_PS_RUNNING;
+    os_processes[currentProc]->checksum = os_getStackChecksum(currentProc);
+    restoreContext();
 }
 
 /*!
  *  This is the idle program. The idle process owns all the memory
  *  and processor time no other process wants to have.
  */
-void idle(void)
-{
+void idle(void) {
     lcd_clear();
     lcd_writeProgString(PSTR("...."));
     delayMs(DEFAULT_OUTPUT_DELAY);
@@ -109,21 +114,16 @@ void idle(void)
  *  \return The index of the new process or INVALID_PROCESS as specified in
  *          defines.h on failure
  */
-ProcessID os_exec(Program *program, Priority priority)
-{
+ProcessID os_exec(Program *program, Priority priority) {
     os_enterCriticalSection()
 
         uint16_t index = 0;
-    do
-    {
+    do {
         Process *element = os_processes[index];
 
-        if (index < MAX_NUMBER_OF_PROCESSES)
-        {
+        if (index < MAX_NUMBER_OF_PROCESSES) {
             index += 1;
-        }
-        else
-        {
+        } else {
             return INVALID_PROCESS
         }
         // TODO: fix check if element is empty or not
@@ -133,8 +133,7 @@ ProcessID os_exec(Program *program, Priority priority)
     // if maximum amount of processes has been exceeded
 
     // Check programpointer validity
-    if (program == NULL)
-    {
+    if (program == NULL) {
         return INVALID_PROCESS;
     }
 
@@ -156,11 +155,11 @@ ProcessID os_exec(Program *program, Priority priority)
  *  function to start the idle program and the concurrent execution of the
  *  applications.
  */
-void os_startScheduler(void)
-{
+void os_startScheduler(void) {
     currentProc = 0;
     os_processes[currentProc]->state = OS_PS_RUNNING;
     SP = os_processes[currentProc]->sp;
+
     restoreContext();
 }
 
@@ -168,13 +167,11 @@ void os_startScheduler(void)
  *  In order for the Scheduler to work properly, it must have the chance to
  *  initialize its internal data-structures and register.
  */
-void os_initScheduler(void)
-{
+void os_initScheduler(void) {
     // TODO: idle process in slot 0 and not in autostart_head
     // loop through autostart list
     ProcessID pid;
-    for (Program *node = autostart_head; node != NULL; node = node->next)
-    {
+    for (Program *node = autostart_head; node != NULL; node = node->next) {
         pid = os_exec(node, DEFAULT_PRIORITY);
         os_processes[pid]->state = OS_PS_READY;
     }
@@ -186,8 +183,7 @@ void os_initScheduler(void)
  *  \param pid The processID of the process to be handled
  *  \return A pointer to the memory of the process at position pid in the os_processes array.
  */
-Process *os_getProcessSlot(ProcessID pid)
-{
+Process *os_getProcessSlot(ProcessID pid) {
     return os_processes + pid;
 }
 
@@ -196,8 +192,7 @@ Process *os_getProcessSlot(ProcessID pid)
  *
  *  \return The process id of the currently active process.
  */
-ProcessID os_getCurrentProc(void)
-{
+ProcessID os_getCurrentProc(void) {
     return currentProc;
 }
 
@@ -206,8 +201,7 @@ ProcessID os_getCurrentProc(void)
  *
  *  \param strategy The strategy that will be used after the function finishes.
  */
-void os_setSchedulingStrategy(SchedulingStrategy strategy)
-{
+void os_setSchedulingStrategy(SchedulingStrategy strategy) {
     currentStrategy = strategy;
     os_resetSchedulingInformation(strategy);
 }
@@ -217,8 +211,7 @@ void os_setSchedulingStrategy(SchedulingStrategy strategy)
  *
  *  \return The current scheduling strategy.
  */
-SchedulingStrategy os_getSchedulingStrategy(void)
-{
+SchedulingStrategy os_getSchedulingStrategy(void) {
     return currentStrategy;
 }
 
@@ -229,8 +222,7 @@ SchedulingStrategy os_getSchedulingStrategy(void)
  *  critical section) to ensure correct behaviour when leaving the section.
  *  This function supports up to 255 nested critical sections.
  */
-void os_enterCriticalSection(void)
-{
+void os_enterCriticalSection(void) {
     uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
     SREG &= 0b10000000;
     criticalSectionCount++;
@@ -245,10 +237,8 @@ void os_enterCriticalSection(void)
  *  stored by os_enterCriticalSection to check if the scheduler
  *  has to be reactivated.
  */
-void os_leaveCriticalSection(void)
-{
-    if (criticalSectionCount <= 0)
-    {
+void os_leaveCriticalSection(void) {
+    if (criticalSectionCount <= 0) {
         criticalSectionCount = 0;
         return
     }
@@ -256,8 +246,7 @@ void os_leaveCriticalSection(void)
     SREG &= 0b10000000;
     criticalSectionCount--;
 
-    if (criticalSectionCount == 0)
-    {
+    if (criticalSectionCount == 0) {
         // TODO: OCIE2A bit im Register TIMSK2 auf 1 setzen
     }
     SREG |= global_interrupt_enable_bit;
@@ -269,12 +258,11 @@ void os_leaveCriticalSection(void)
  *  \param pid The ID of the process for which the stack's checksum has to be calculated.
  *  \return The checksum of the pid'th stack.
  */
-StackChecksum os_getStackChecksum(ProcessID pid)
-{
-
+StackChecksum os_getStackChecksum(ProcessID pid) {
     StackPointer bottom_pointer = PROCESS_STACK_BOTTOM(pid);
     StackPointer current_pointer = os_getProcessSlot(pid)->sp;
 
-    // TODO: XOR all the memory between the 2 pointers
-    return
+    StackChecksum checksum = current_pointer - bottom_pointer;
+
+    return checksum
 }
