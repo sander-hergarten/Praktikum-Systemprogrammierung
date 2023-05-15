@@ -142,11 +142,13 @@ ProcessID os_exec(Program *program, Priority priority)
     element->priority = priority;
     element->state = OS_PS_READY;
     element->sp = PROCESS_STACK_BOTTOM(index);
+    element->checksum = os_getStackChecksum(index);
+
     // TODO: Processstack vorbereiten
 
-    os_leaveCriticalSection()
+    os_leaveCriticalSection();
 
-        return index;
+    return index;
 }
 
 /*!
@@ -258,7 +260,7 @@ void os_leaveCriticalSection(void)
     {
         // TODO: OCIE2A bit im Register TIMSK2 auf 1 setzen
     }
-    SREG |= global_interrupt_enable_bit
+    SREG |= global_interrupt_enable_bit;
 }
 
 /*!
@@ -269,8 +271,10 @@ void os_leaveCriticalSection(void)
  */
 StackChecksum os_getStackChecksum(ProcessID pid)
 {
-    Process *process = os_getProcessSlot(pid);
-    StackChecksum checksum = process->checksum
-                             // TODO: get processesstack
-                             return checksum
+
+    StackPointer bottom_pointer = PROCESS_STACK_BOTTOM(pid);
+    StackPointer current_pointer = os_getProcessSlot(pid)->sp;
+
+    // TODO: XOR all the memory between the 2 pointers
+    return
 }
