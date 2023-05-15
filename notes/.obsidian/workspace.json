@@ -25,7 +25,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Process.md",
+                "file": "Prozess.md",
                 "mode": "source",
                 "source": false
               }
@@ -37,7 +37,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Program.md",
+                "file": "Programm.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +85,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Process Stack.md",
+                "file": "Prozess Stack.md",
                 "mode": "source",
                 "source": false
               }
@@ -97,14 +97,38 @@
             "state": {
               "type": "markdown",
               "state": {
+                "file": "Prozess.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "529dc482015d114f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
                 "file": "Scheduling.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "cf238b46343cba94",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Scheduling Strategien.md",
                 "mode": "source",
                 "source": false
               }
             }
           }
         ],
-        "currentTab": 7
+        "currentTab": 9
       }
     ],
     "direction": "vertical"
@@ -170,7 +194,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Scheduling.md",
+                "file": "Scheduling Strategien.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -187,7 +211,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Scheduling.md",
+                "file": "Scheduling Strategien.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -210,7 +234,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Scheduling.md"
+                "file": "Scheduling Strategien.md"
               }
             }
           }
@@ -231,15 +255,17 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "10076f7f3d459b4c",
+  "active": "cf238b46343cba94",
   "lastOpenFiles": [
-    "Process Stack.md",
     "Scheduling.md",
+    "Scheduling Strategien.md",
+    "Programm.md",
+    "Laufzeitkontext.md",
+    "Prozess.md",
+    "Prozess Stack.md",
     "Critical Section.md",
     "Registers.md",
     "Stack Pointer.md",
-    "Program.md",
-    "Process.md",
     "About.md"
   ]
 }

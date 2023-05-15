@@ -1,0 +1,1 @@
+Der Laufzeitkontext ist die SUmme der Prozessorregister, die u einem Zeitpunkt den Ausfuehrungszustand eines Prozesses abbilden.

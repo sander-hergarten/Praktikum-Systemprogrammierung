@@ -1,0 +1,1 @@
+ein Prozess ist eine Instanz eines [[Programm|Programms]] welche durch das Betriebssystem mit dessen sogenannten [[Laufzeitkontext]] verwaltet wird.
