@@ -28,7 +28,6 @@
 // Globals
 //----------------------------------------------------------------------------
 
-// ? should this be a tree?
 Process os_processes[MAX_NUMBER_OF_PROCESSES];
 ProcessID currentProc;
 
@@ -112,16 +111,26 @@ void idle(void)
  */
 ProcessID os_exec(Program *program, Priority priority)
 {
-    uint16_t index = 0;
+    os_enterCriticalSection()
+
+        uint16_t index = 0;
     do
     {
         Process *element = os_processes[index];
-        index += 1;
-    } while (sizeof(&element) >= 0 && index <= MAX_NUMBER_OF_PROCESSES);
-    if (index > MAX_NUMBER_OF_PROCESSES)
-    {
-        return INVALID_PROCESS;
-    }
+
+        if (index < MAX_NUMBER_OF_PROCESSES)
+        {
+            index += 1;
+        }
+        else
+        {
+            return INVALID_PROCESS
+        }
+        // TODO: fix check if element is empty or not
+        // loop while ellement is not empty and the maximum amount of processes has not been exceeded
+    } while (sizeof(&element) >= 0 && index < MAX_NUMBER_OF_PROCESSES);
+
+    // if maximum amount of processes has been exceeded
 
     // Check programpointer validity
     if (program == NULL)
@@ -219,6 +228,11 @@ SchedulingStrategy os_getSchedulingStrategy(void)
 void os_enterCriticalSection(void)
 {
     uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
+    SREG &= 0b10000000;
+    criticalSectionCount++;
+
+    // TODO: OCIE2A bit im Register TIMSK2 auf 0 setzen
+    SREG |= global_interrupt_enable_bit
 }
 
 /*!
@@ -227,8 +241,23 @@ void os_enterCriticalSection(void)
  *  stored by os_enterCriticalSection to check if the scheduler
  *  has to be reactivated.
  */
-void os_leaveCriticalSection(void){
-#warning IMPLEMENT STH. HERE
+void os_leaveCriticalSection(void)
+{
+    if (criticalSectionCount <= 0)
+    {
+        criticalSectionCount = 0;
+#warning NO CRITICAL SECTION ACTIVE
+        return
+    }
+    uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
+    SREG &= 0b10000000;
+    criticalSectionCount--;
+
+    if (criticalSectionCount == 0)
+    {
+        // TODO: OCIE2A bit im Register TIMSK2 auf 1 setzen
+    }
+    SREG |= global_interrupt_enable_bit
 }
 
 /*!
