@@ -11,12 +11,12 @@
 #ifndef _OS_PROCESS_H
 #define _OS_PROCESS_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 //! The type for the ID of a running process.
 #warning IMPLEMENT STH. HERE
-typedef ? ProcessID;
+typedef uint32_t ProcessID;
 
 //! This is the type of a program function (not the pointer to one!).
 typedef void Program(void);
@@ -31,8 +31,7 @@ typedef uint16_t Age;
 typedef uint8_t StackChecksum;
 
 //! Type for the state a specific process is currently in.
-typedef enum ProcessState
-{
+typedef enum ProcessState {
     OS_PS_UNUSED,
     OS_PS_READY,
     OS_PS_RUNNING,
@@ -41,8 +40,7 @@ typedef enum ProcessState
 
 //! A union that holds the current stack pointer of a given process.
 //! We use a union so we can reduce the number of explicit casts.
-typedef union StackPointer
-{
+typedef union StackPointer {
     uint16_t as_int;
     uint8_t *as_ptr;
 } StackPointer;
@@ -67,8 +65,7 @@ typedef struct
  *  containing program pointers.
  *  Iteration is possible by following the pointer in the next field.
  */
-struct program_linked_list_node
-{
+struct program_linked_list_node {
     Program *program;
     struct program_linked_list_node *next;
 };
@@ -97,8 +94,7 @@ extern struct program_linked_list_node *autostart_head;
  */
 #define REGISTER_AUTOSTART(PROGRAM_FUNCTION)                                         \
     Program PROGRAM_FUNCTION;                                                        \
-    void __attribute__((constructor)) register_autostart_##PROGRAM_FUNCTION(void)    \
-    {                                                                                \
+    void __attribute__((constructor)) register_autostart_##PROGRAM_FUNCTION(void) {  \
         static struct program_linked_list_node node = {.program = PROGRAM_FUNCTION}; \
         node.next = autostart_head;                                                  \
         autostart_head = &node;                                                      \
