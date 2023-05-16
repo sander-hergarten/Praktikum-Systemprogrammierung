@@ -74,6 +74,5 @@ void os_leaveCriticalSection(void);
 SchedulingStrategyFn os_getSchedulingStrategyFn(void);
 
 SchedulingStrategyFn _schedulingStrategyFnFactory(SchedulingStrategy strategy);
-`
 
 #endif
