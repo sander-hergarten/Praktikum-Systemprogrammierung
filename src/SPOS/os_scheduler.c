@@ -141,7 +141,7 @@ ProcessID os_exec(Program *program, Priority priority) {
 
     os_leaveCriticalSection();
 
-    return index;
+    return free_process_slot;
 }
 
 /*!
