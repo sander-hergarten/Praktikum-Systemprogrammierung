@@ -306,7 +306,9 @@ void os_leaveCriticalSection(void) {
  */
 StackChecksum os_getStackChecksum(ProcessID pid) {
     StackPointer current_pointer = os_getProcessSlot(pid)->sp;
-    StackPointer initial_pointer.as_ptr = current_pointer.as_ptr - 35;
+    StackPointer initial_pointer = current_pointer;
+
+    initial_pointer.as_ptr -= 35;
 
     StackChecksum checksum = *initial_pointer.as_ptr;
 
