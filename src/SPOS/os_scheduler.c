@@ -113,18 +113,14 @@ void idle(void) {
 ProcessID os_exec(Program *program, Priority priority) {
     os_enterCriticalSection();
 
-    uint16_t index = 0;
-    do {
-        Process *element = os_getProcessSlot(index);
-
-        if (index < MAX_NUMBER_OF_PROCESSES) {
-            index += 1;
-        } else {
+    // Find empty process slot
+    ProcessID free_process_slot;
+    while (os_getProcessSlot(free_process_slot)->state != OS_PS_UNUSED) {
+        free_process_slot++;
+        if (free_process_slot >= MAX_NUMBER_OF_PROCESSES) {
             return INVALID_PROCESS;
         }
-        // TODO: fix check if element is empty or not
-        // loop while ellement is not empty and the maximum amount of processes has not been exceeded
-    } while (sizeof(&element) >= 0 && index < MAX_NUMBER_OF_PROCESSES);
+    }
 
     // if maximum amount of processes has been exceeded
 
@@ -133,11 +129,13 @@ ProcessID os_exec(Program *program, Priority priority) {
         return INVALID_PROCESS;
     }
 
-    element->program = program;
-    element->priority = priority;
-    element->state = OS_PS_READY;
-    element->sp.as_int = PROCESS_STACK_BOTTOM(index);
-    element->checksum = os_getStackChecksum(index);
+    empty_process = os_getProcessSlot(free_process_slot);
+
+    empty_process->program = program;
+    empty_process->priority = priority;
+    empty_process->state = OS_PS_READY;
+    empty_process->sp.as_int = PROCESS_STACK_BOTTOM(index);
+    empty_process->checksum = os_getStackChecksum(index);
 
     // TODO: Processstack vorbereiten
 
@@ -154,7 +152,7 @@ ProcessID os_exec(Program *program, Priority priority) {
 void os_startScheduler(void) {
     currentProc = 0;
     os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
-    SP = os_getProcessSlot(currentProc)->sp;
+    SP = os_getProcessSlot(currentProc)->sp.as_int;
 
     restoreContext();
 }
