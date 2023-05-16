@@ -259,7 +259,7 @@ StackChecksum os_getStackChecksum(ProcessID pid) {
     StackPointer bottom_pointer = PROCESS_STACK_BOTTOM(pid);
     StackPointer current_pointer = os_getProcessSlot(pid)->sp;
 
-    StackChecksum checksum = current_pointer - bottom_pointer;
+    StackChecksum checksum = current_pointer.as_ptr - bottom_pointer.as_ptr;
 
     return checksum;
 }
