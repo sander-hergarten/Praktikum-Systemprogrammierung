@@ -74,7 +74,7 @@ ISR(TIMER2_COMPA_vect) {
     currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
 
     SP = os_getProcessSlot(currentProc)->sp;
-    if (os_getInput() == 0b00001000 | 0b00000001) {
+    if (os_getInput() == (0b00001000 | 0b00000001)) {
         os_waitForNoInput();
         os_taskManOpen();
     }
@@ -153,8 +153,8 @@ ProcessID os_exec(Program *program, Priority priority) {
  */
 void os_startScheduler(void) {
     currentProc = 0;
-    os_processes[currentProc]->state = OS_PS_RUNNING;
-    SP = os_processes[currentProc]->sp;
+    os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
+    SP = os_getProcessSlot(currentProc)->sp;
 
     restoreContext();
 }
@@ -164,12 +164,13 @@ void os_startScheduler(void) {
  *  initialize its internal data-structures and register.
  */
 void os_initScheduler(void) {
-    // TODO: idle process in slot 0 and not in autostart_head
-    // loop through autostart list
-    ProcessID pid;
-    for (Program *node = autostart_head; node != NULL; node = node->next) {
-        pid = os_exec(node, DEFAULT_PRIORITY);
-        os_processes[pid]->state = OS_PS_READY;
+    os_processes[0] = idle
+
+        // loop through autostart list
+        ProcessID pid = 1;
+    for (struct program_linked_list_node *node = autostart_head; node != NULL; node = node->next) {
+        pid = os_exec(node->program, DEFAULT_PRIORITY);
+        os_processes[pid].state = OS_PS_READY;
     }
 }
 
