@@ -168,10 +168,23 @@ ProcessID os_exec(Program *program, Priority priority) {
     empty_process->program = program;
     empty_process->priority = priority;
     empty_process->state = OS_PS_READY;
-    empty_process->sp.as_int = PROCESS_STACK_BOTTOM(free_process_slot);
-    empty_process->checksum = os_getStackChecksum(free_process_slot);
 
-    // TODO: Processstack vorbereiten
+    StackPointer stack_pointer = PROCESS_STACK_BOTTOM(free_process_slot);
+
+    *stack_pointer.as_ptr = (uint8_t)PC;
+    stack_pointer.as_ptr++;
+
+    *stack_pointer.as_ptr = (uint8_t)PC >> 8;
+    stack_pointer.as_ptr++;
+
+    for (int i = 0; i < 33; i++) {
+        *stack_pointer.as_ptr = 0x00;
+        stack_pointer.as_ptr++;
+    }
+    empty_process->sp = stack_pointer;
+
+    // TODO: fix Checksum
+    empty_process->checksum = os_getStackChecksum(free_process_slot);
 
     os_leaveCriticalSection();
 
