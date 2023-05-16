@@ -67,13 +67,13 @@ __attribute__((naked));
  */
 ISR(TIMER2_COMPA_vect) {
     saveContext();
-    os_getProcessSlot(currentProc)->sp = SP;
+    os_getProcessSlot(currentProc)->sp.as_int = SP;
     // TODO Setzen des SP-Registers auf den Scheduler stack
     os_getProcessSlot(currentProc)->state = OS_PS_READY;
 
     currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
 
-    SP = os_getProcessSlot(currentProc)->sp;
+    SP = os_getProcessSlot(currentProc)->sp.as_int;
     if (os_getInput() == (0b00001000 | 0b00000001)) {
         os_waitForNoInput();
         os_taskManOpen();
@@ -115,7 +115,7 @@ ProcessID os_exec(Program *program, Priority priority) {
 
     uint16_t index = 0;
     do {
-        Process *element = os_processes[index];
+        Process *element = os_getProcessSlot(index);
 
         if (index < MAX_NUMBER_OF_PROCESSES) {
             index += 1;
@@ -136,7 +136,7 @@ ProcessID os_exec(Program *program, Priority priority) {
     element->program = program;
     element->priority = priority;
     element->state = OS_PS_READY;
-    element->sp = PROCESS_STACK_BOTTOM(index);
+    element->sp.as_int = PROCESS_STACK_BOTTOM(index);
     element->checksum = os_getStackChecksum(index);
 
     // TODO: Processstack vorbereiten
