@@ -23,8 +23,6 @@ void os_resetProcessSchedulingInformation(ProcessID id);
 //! Used to reset the SchedulingInfo for a strategy
 void os_resetSchedulingInformation(SchedulingStrategy strategy);
 
-typedef ProcessID (*SchedulingStrategyFn)(Process const processes[], ProcessID current);
-
 //! Even strategy
 ProcessID os_Scheduler_Even(Process const processes[], ProcessID current);
 
