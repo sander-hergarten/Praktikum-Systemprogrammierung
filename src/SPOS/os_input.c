@@ -50,7 +50,7 @@ void os_waitForInput() {
 void os_waitForInputOrTimeout(uint16_t timeout) {
     while (os_getInput() == 0 && timeout > 0) {
         timeout--;
-        delayMs(1);
+        _delayMs(1);
     }
 }
 
