@@ -76,7 +76,7 @@ ISR(TIMER2_COMPA_vect) {
 
     os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
 
-    SP = os_getProcessSlot(currentProc)->sp.as_ptr;
+    SP = os_getProcessSlot(currentProc)->sp.as_int;
 
     if (os_getInput() == (0b00001000 | 0b00000001)) {
         os_waitForNoInput();
