@@ -29,6 +29,7 @@ typedef enum SchedulingStrategy {
     OS_SS_INACTIVE_AGING
 } SchedulingStrategy;
 
+typedef ProcessID (*SchedulingStrategyFn)(Process const processes[], ProcessID current);
 //----------------------------------------------------------------------------
 // Function headers
 //----------------------------------------------------------------------------
@@ -69,5 +70,10 @@ void os_enterCriticalSection(void);
 
 //! Leaves a critical code section
 void os_leaveCriticalSection(void);
+
+SchedulingStrategyFn os_getSchedulingStrategyFn(void);
+
+SchedulingStrategyFn _schedulingStrategyFnFactory(SchedulingStrategy strategy);
+`
 
 #endif

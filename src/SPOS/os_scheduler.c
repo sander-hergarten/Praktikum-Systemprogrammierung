@@ -57,7 +57,6 @@ __attribute__((naked));
 // Function definitions
 //----------------------------------------------------------------------------
 
-typedef ProcessID (*SchedulingStrategyFn)(Process const processes[], ProcessID current);
 /*!
  *  Timer interrupt that implements our scheduler. Execution of the running
  *  process is suspended and the context saved to the stack. Then the periphery
