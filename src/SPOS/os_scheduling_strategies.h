@@ -11,8 +11,8 @@
 #ifndef _OS_SCHEDULING_STRATEGIES_H
 #define _OS_SCHEDULING_STRATEGIES_H
 
-#include "os_scheduler.h"
 #include "defines.h"
+#include "os_scheduler.h"
 
 //! Structure used to store specific scheduling informations such as a time slice
 // This is a presence task
@@ -22,6 +22,8 @@ void os_resetProcessSchedulingInformation(ProcessID id);
 
 //! Used to reset the SchedulingInfo for a strategy
 void os_resetSchedulingInformation(SchedulingStrategy strategy);
+
+typedef ProcessID (*SchedulingStrategyFn)(Process const processes[], ProcessID current);
 
 //! Even strategy
 ProcessID os_Scheduler_Even(Process const processes[], ProcessID current);

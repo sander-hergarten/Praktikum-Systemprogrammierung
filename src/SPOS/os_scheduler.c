@@ -71,7 +71,7 @@ ISR(TIMER2_COMPA_vect) {
     // TODO Setzen des SP-Registers auf den Scheduler stack
     os_getProcessSlot(currentProc)->state = OS_PS_READY;
 
-    currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
+    currentProc = (*os_getSchedulingStrategyFn())(os_processes, currentProc);
 
     SP = os_getProcessSlot(currentProc)->sp.as_int;
     if (os_getInput() == (0b00001000 | 0b00000001)) {
@@ -92,6 +92,41 @@ void idle(void) {
     lcd_clear();
     lcd_writeProgString(PSTR("...."));
     delayMs(DEFAULT_OUTPUT_DELAY);
+}
+
+SchedulingStrategyFn os_getSchedulingStrategyFn(void) {
+    return _schedulingStrategyFnFactory(os_getSchedulingStrategy());
+}
+
+SchedulingStrategyFn _schedulingStrategyFnFactory(SchedulingStrategy strategy) {
+    SchedulingStrategyFn currentStrategyFn;
+
+    switch (strategy) {
+        case OS_SS_EVEN:
+            currentStrategyFn = &os_Scheduler_Even;
+            break;
+
+        case OS_SS_RANDOM:
+            currentStrategyFn = &os_Scheduler_Random;
+            break;
+
+        case OS_SS_RUN_TO_COMPLETION:
+            currentStrategyFn = &os_Scheduler_RunToCompletion;
+            break;
+
+        case OS_SS_ROUND_ROBIN:
+            currentStrategyFn = &os_Scheduler_RoundRobin;
+            break;
+
+        case OS_SS_INACTIVE_AGING:
+            currentStrategyFn = &os_Scheduler_InactiveAging;
+            break;
+        default:
+            currentStrategyFn = &os_Scheduler_Even;
+            break;
+    }
+
+    return currentStrategyFn;
 }
 
 /*!
