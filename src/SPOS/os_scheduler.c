@@ -129,13 +129,13 @@ ProcessID os_exec(Program *program, Priority priority) {
         return INVALID_PROCESS;
     }
 
-    empty_process = os_getProcessSlot(free_process_slot);
+    Process *empty_process = os_getProcessSlot(free_process_slot);
 
     empty_process->program = program;
     empty_process->priority = priority;
     empty_process->state = OS_PS_READY;
-    empty_process->sp.as_int = PROCESS_STACK_BOTTOM(index);
-    empty_process->checksum = os_getStackChecksum(index);
+    empty_process->sp.as_int = PROCESS_STACK_BOTTOM(free_process_slot);
+    empty_process->checksum = os_getStackChecksum(free_process_slot);
 
     // TODO: Processstack vorbereiten
 
