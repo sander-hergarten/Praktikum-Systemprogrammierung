@@ -92,7 +92,6 @@ void idle(void) {
     lcd_clear();
     lcd_writeProgString(PSTR("...."));
     delayMs(DEFAULT_OUTPUT_DELAY);
-    break;
 }
 
 /*!
@@ -112,16 +111,16 @@ void idle(void) {
  *          defines.h on failure
  */
 ProcessID os_exec(Program *program, Priority priority) {
-    os_enterCriticalSection()
+    os_enterCriticalSection();
 
-        uint16_t index = 0;
+    uint16_t index = 0;
     do {
         Process *element = os_processes[index];
 
         if (index < MAX_NUMBER_OF_PROCESSES) {
             index += 1;
         } else {
-            return INVALID_PROCESS
+            return INVALID_PROCESS;
         }
         // TODO: fix check if element is empty or not
         // loop while ellement is not empty and the maximum amount of processes has not been exceeded
