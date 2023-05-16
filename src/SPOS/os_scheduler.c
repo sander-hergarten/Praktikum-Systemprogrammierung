@@ -164,10 +164,10 @@ void os_startScheduler(void) {
  *  initialize its internal data-structures and register.
  */
 void os_initScheduler(void) {
-    os_processes[0] = idle
+    os_processes[0] = idle;
 
-        // loop through autostart list
-        ProcessID pid = 1;
+    // loop through autostart list
+    ProcessID pid = 1;
     for (struct program_linked_list_node *node = autostart_head; node != NULL; node = node->next) {
         pid = os_exec(node->program, DEFAULT_PRIORITY);
         os_processes[pid].state = OS_PS_READY;
