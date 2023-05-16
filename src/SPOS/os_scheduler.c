@@ -29,14 +29,11 @@
 // Globals
 //----------------------------------------------------------------------------
 
-Process os_processes[MAX_NUMBER_OF_PROCESSES];
-ProcessID currentProc;
-
 //! Array of states for every possible process
-#warning IMPLEMENT STH. HERE
+Process os_processes[MAX_NUMBER_OF_PROCESSES];
 
 //! Index of process that is currently executed (default: idle)
-#warning IMPLEMENT STH. HERE
+ProcessID currentProc;
 
 //----------------------------------------------------------------------------
 // Private variables
@@ -70,13 +67,13 @@ __attribute__((naked));
  */
 ISR(TIMER2_COMPA_vect) {
     saveContext();
-    os_processes[os_getCurrentProc()]->sp = SP;
+    os_getProcessSlot()->sp = SP;
     // TODO Setzen des SP-Registers auf den Scheduler stack
-    os_processes[os_getCurrentProc()]->state = OS_PS_READY;
+    os_getProcessSlot()->state = OS_PS_READY;
 
     currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
 
-    SP = os_processes[currentProc]->sp;
+    SP = os_getProcessSlot()->sp;
     if (os_getInput() == 0b00001000 | 0b00000001) {
         os_waitForNoInput();
         os_taskManOpen();

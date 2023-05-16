@@ -49,8 +49,8 @@ void os_resetProcessSchedulingInformation(ProcessID id) {
  *  \param current The id of the current process.
  *  \return The next process to be executed determined on the basis of the even strategy.
  */
-ProcessID os_Scheduler_Even(Process const processes[], ProcessID current){
-#warning IMPLEMENT STH. HERE
+ProcessID os_Scheduler_Even(Process const processes[], ProcessID current) {
+    return find_next_ready_process(processes, current % MAX_NUMBER_OF_PROCESSES, 1);
 }
 
 /*!
