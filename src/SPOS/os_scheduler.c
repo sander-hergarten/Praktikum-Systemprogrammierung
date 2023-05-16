@@ -167,8 +167,8 @@ void os_initScheduler(void) {
     // loop through autostart list
     ProcessID pid = 0;
 
-    struct program_linked_list_node *node = &{.program = idle, .next = autostart_head};
-    for (node; node != NULL; node = node->next) {
+    struct program_linked_list_node initial_node = {.program = idle, .next = autostart_head};
+    for (struct program_liked_list_node node = &initial_node; node != NULL; node = node->next) {
         pid = os_exec(node->program, DEFAULT_PRIORITY);
         os_processes[pid].state = OS_PS_READY;
     }
