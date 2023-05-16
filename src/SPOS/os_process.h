@@ -15,7 +15,6 @@
 #include <stdint.h>
 
 //! The type for the ID of a running process.
-#warning IMPLEMENT STH. HERE
 typedef uint32_t ProcessID;
 
 //! This is the type of a program function (not the pointer to one!).
