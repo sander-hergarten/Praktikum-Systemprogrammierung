@@ -67,20 +67,20 @@ __attribute__((naked));
  */
 ISR(TIMER2_COMPA_vect) {
     saveContext();
-    os_getProcessSlot()->sp = SP;
+    os_getProcessSlot(currentProc)->sp = SP;
     // TODO Setzen des SP-Registers auf den Scheduler stack
-    os_getProcessSlot()->state = OS_PS_READY;
+    os_getProcessSlot(currentProc)->state = OS_PS_READY;
 
     currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
 
-    SP = os_getProcessSlot()->sp;
+    SP = os_getProcessSlot(currentProc)->sp;
     if (os_getInput() == 0b00001000 | 0b00000001) {
         os_waitForNoInput();
         os_taskManOpen();
     }
 
-    os_processes[currentProc]->state = OS_PS_RUNNING;
-    os_processes[currentProc]->checksum = os_getStackChecksum(currentProc);
+    os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
+    os_getProcessSlot(currentProc)->checksum = os_getStackChecksum(currentProc);
     restoreContext();
 }
 
@@ -225,7 +225,7 @@ void os_enterCriticalSection(void) {
     criticalSectionCount++;
 
     // TODO: OCIE2A bit im Register TIMSK2 auf 0 setzen
-    SREG |= global_interrupt_enable_bit
+    SREG |= global_interrupt_enable_bit;
 }
 
 /*!
@@ -237,7 +237,7 @@ void os_enterCriticalSection(void) {
 void os_leaveCriticalSection(void) {
     if (criticalSectionCount <= 0) {
         criticalSectionCount = 0;
-        return
+        return;
     }
     uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
     SREG &= 0b10000000;
@@ -261,5 +261,5 @@ StackChecksum os_getStackChecksum(ProcessID pid) {
 
     StackChecksum checksum = current_pointer - bottom_pointer;
 
-    return checksum
+    return checksum;
 }
