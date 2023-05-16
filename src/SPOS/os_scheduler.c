@@ -99,6 +99,7 @@ SchedulingStrategyFn os_getSchedulingStrategyFn(void) {
 }
 
 SchedulingStrategyFn _schedulingStrategyFnFactory(SchedulingStrategy strategy) {
+    SchedulingStrategyFn currentStrategyFn;
     switch (strategy) {
         case OS_SS_EVEN:
             currentStrategyFn = &os_Scheduler_Even;
