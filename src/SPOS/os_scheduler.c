@@ -43,7 +43,7 @@ ProcessID currentProc;
 SchedulingStrategy currentStrategy;
 
 //! Count of currently nested critical sections
-uint32_t criticalSectionCount = 0;
+uint8_t criticalSectionCount = 0;
 
 //----------------------------------------------------------------------------
 // Private function declarations
@@ -68,20 +68,25 @@ __attribute__((naked));
 ISR(TIMER2_COMPA_vect) {
     saveContext();
     os_getProcessSlot(currentProc)->sp.as_int = SP;
-    // TODO Setzen des SP-Registers auf den Scheduler stack
+    *BOTTOM_OF_ISR_STACK() = SP;
     os_getProcessSlot(currentProc)->state = OS_PS_READY;
+    os_getProcessSlot(currentProc)->checksum = os_getStackChecksum(currentProc);
 
     currentProc = (*os_getSchedulingStrategyFn())(os_processes, currentProc);
 
-    SP = os_getProcessSlot(currentProc)->sp.as_int;
+    os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
+
+    SP = os_getProcessSlot(currentProc)->sp.as_ptr;
+
     if (os_getInput() == (0b00001000 | 0b00000001)) {
         os_waitForNoInput();
         os_taskManOpen();
     }
-
-    os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
-    os_getProcessSlot(currentProc)->checksum = os_getStackChecksum(currentProc);
     restoreContext();
+
+    if (os_getProcessSlot(currentProc)->checksum != os_getStackChecksum(currentProc)) {
+        os_error("Stack overflow detected");
+    }
 }
 
 /*!
@@ -182,8 +187,6 @@ ProcessID os_exec(Program *program, Priority priority) {
         stack_pointer.as_ptr++;
     }
     empty_process->sp = stack_pointer;
-
-    // TODO: fix Checksum
     empty_process->checksum = os_getStackChecksum(free_process_slot);
 
     os_leaveCriticalSection();
@@ -213,6 +216,7 @@ void os_initScheduler(void) {
     ProcessID pid = 0;
 
     struct program_linked_list_node initial_node = {.program = idle, .next = autostart_head};
+
     for (struct program_linked_list_node *node = &initial_node; node != NULL; node = node->next) {
         pid = os_exec(node->program, DEFAULT_PRIORITY);
         os_processes[pid].state = OS_PS_READY;
@@ -301,10 +305,15 @@ void os_leaveCriticalSection(void) {
  *  \return The checksum of the pid'th stack.
  */
 StackChecksum os_getStackChecksum(ProcessID pid) {
-    StackPointer bottom_pointer = PROCESS_STACK_BOTTOM(pid);
     StackPointer current_pointer = os_getProcessSlot(pid)->sp;
+    StackPointer initial_pointer.as_ptr = current_pointer.as_ptr - 35;
 
-    StackChecksum checksum = current_pointer.as_ptr - bottom_pointer.as_ptr;
+    StackChecksum checksum = *initial_pointer.as_ptr;
+
+    while (initial_pointer.as_ptr < current_pointer.as_ptr) {
+        checksum ^= *initial_pointer.as_ptr;
+        initial_pointer.as_ptr++;
+    }
 
     return checksum;
 }
