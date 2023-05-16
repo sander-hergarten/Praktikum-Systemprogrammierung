@@ -47,13 +47,6 @@ void os_waitForInput() {
         ;
 }
 
-void os_waitForInputOrTimeout(uint16_t timeout) {
-    while (os_getInput() == 0 && timeout > 0) {
-        timeout--;
-        _delayMs(1);
-    }
-}
-
 void os_waitForCertainInput(uint8_t input) {
     while ((os_getInput() & input) == 0)
         ;
