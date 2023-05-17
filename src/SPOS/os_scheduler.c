@@ -177,10 +177,11 @@ ProcessID os_exec(Program *program, Priority priority) {
     StackPointer stack_pointer;
     stack_pointer.as_int = PROCESS_STACK_BOTTOM(free_process_slot);
 
-    *stack_pointer.as_ptr = (uint8_t)PC;
+    uint16_t program_counter = program;
+    *stack_pointer.as_ptr = (uint8_t)program_counter;
     stack_pointer.as_ptr++;
 
-    *stack_pointer.as_ptr = (uint8_t)PC >> 8;
+    *stack_pointer.as_ptr = (uint8_t)program_counter >> 8;
     stack_pointer.as_ptr++;
 
     for (int i = 0; i < 33; i++) {
