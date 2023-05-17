@@ -64,7 +64,7 @@ ProcessID os_Scheduler_Even(Process const processes[], ProcessID current) {
 ProcessID os_Scheduler_Random(Process const processes[], ProcessID current) {
     // TODO: REFACTOR
     uint16_t found = 0;
-    ProcessID result;
+    ProcessID result = 0;
 
     int randomnumber = rand() % MAX_NUMBER_OF_PROCESSES;
 
