@@ -49,8 +49,8 @@ void os_resetProcessSchedulingInformation(ProcessID id) {
  *  \param current The id of the current process.
  *  \return The next process to be executed determined on the basis of the even strategy.
  */
-ProcessID os_Scheduler_Even(Process const processes[], ProcessID current){
-#warning IMPLEMENT STH. HERE
+ProcessID os_Scheduler_Even(Process const processes[], ProcessID current) {
+    return find_next_ready_process(processes, current % MAX_NUMBER_OF_PROCESSES, 1);
 }
 
 /*!
@@ -64,7 +64,7 @@ ProcessID os_Scheduler_Even(Process const processes[], ProcessID current){
 ProcessID os_Scheduler_Random(Process const processes[], ProcessID current) {
     // TODO: REFACTOR
     uint16_t found = 0;
-    ProcessID result;
+    ProcessID result = 0;
 
     int randomnumber = rand() % MAX_NUMBER_OF_PROCESSES;
 
@@ -79,6 +79,8 @@ ProcessID os_Scheduler_Random(Process const processes[], ProcessID current) {
 
     if (result == 0) {
         result = find_next_ready_process(processes, result, 1);
+    } else {
+        result = 1;
     }
 
     return result;

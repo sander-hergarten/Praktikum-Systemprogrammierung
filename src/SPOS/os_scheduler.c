@@ -29,14 +29,11 @@
 // Globals
 //----------------------------------------------------------------------------
 
-Process os_processes[MAX_NUMBER_OF_PROCESSES];
-ProcessID currentProc;
-
 //! Array of states for every possible process
-#warning IMPLEMENT STH. HERE
+Process os_processes[MAX_NUMBER_OF_PROCESSES];
 
 //! Index of process that is currently executed (default: idle)
-#warning IMPLEMENT STH. HERE
+ProcessID currentProc;
 
 //----------------------------------------------------------------------------
 // Private variables
@@ -46,7 +43,7 @@ ProcessID currentProc;
 SchedulingStrategy currentStrategy;
 
 //! Count of currently nested critical sections
-uint32_t criticalSectionCount = 0;
+uint8_t criticalSectionCount = 0;
 
 //----------------------------------------------------------------------------
 // Private function declarations
@@ -70,21 +67,26 @@ __attribute__((naked));
  */
 ISR(TIMER2_COMPA_vect) {
     saveContext();
-    os_processes[os_getCurrentProc()]->sp = SP;
-    // TODO Setzen des SP-Registers auf den Scheduler stack
-    os_processes[os_getCurrentProc()]->state = OS_PS_READY;
+    os_getProcessSlot(currentProc)->sp.as_int = SP;
+    SP = BOTTOM_OF_ISR_STACK;
+    os_getProcessSlot(currentProc)->state = OS_PS_READY;
+    os_getProcessSlot(currentProc)->checksum = os_getStackChecksum(currentProc);
 
-    currentProc = os_getSchedulingStrategy()(os_processes, currentProc);
+    currentProc = (*os_getSchedulingStrategyFn())(os_processes, currentProc);
 
-    SP = os_processes[currentProc]->sp;
-    if (os_getInput() == 0b00001000 | 0b00000001) {
+    os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
+
+    SP = os_getProcessSlot(currentProc)->sp.as_int;
+
+    if (os_getInput() == (0b00001000 | 0b00000001)) {
         os_waitForNoInput();
         os_taskManOpen();
     }
-
-    os_processes[currentProc]->state = OS_PS_RUNNING;
-    os_processes[currentProc]->checksum = os_getStackChecksum(currentProc);
     restoreContext();
+
+    if (os_getProcessSlot(currentProc)->checksum != os_getStackChecksum(currentProc)) {
+        os_error("Stack overflow detected");
+    }
 }
 
 /*!
@@ -95,7 +97,40 @@ void idle(void) {
     lcd_clear();
     lcd_writeProgString(PSTR("...."));
     delayMs(DEFAULT_OUTPUT_DELAY);
-    break;
+}
+
+SchedulingStrategyFn os_getSchedulingStrategyFn(void) {
+    return _schedulingStrategyFnFactory(os_getSchedulingStrategy());
+}
+
+SchedulingStrategyFn _schedulingStrategyFnFactory(SchedulingStrategy strategy) {
+    SchedulingStrategyFn currentStrategyFn;
+    switch (strategy) {
+        case OS_SS_EVEN:
+            currentStrategyFn = &os_Scheduler_Even;
+            break;
+
+        case OS_SS_RANDOM:
+            currentStrategyFn = &os_Scheduler_Random;
+            break;
+
+        case OS_SS_RUN_TO_COMPLETION:
+            currentStrategyFn = &os_Scheduler_RunToCompletion;
+            break;
+
+        case OS_SS_ROUND_ROBIN:
+            currentStrategyFn = &os_Scheduler_RoundRobin;
+            break;
+
+        case OS_SS_INACTIVE_AGING:
+            currentStrategyFn = &os_Scheduler_InactiveAging;
+            break;
+        default:
+            currentStrategyFn = &os_Scheduler_Even;
+            break;
+    }
+
+    return currentStrategyFn;
 }
 
 /*!
@@ -115,20 +150,16 @@ void idle(void) {
  *          defines.h on failure
  */
 ProcessID os_exec(Program *program, Priority priority) {
-    os_enterCriticalSection()
+    os_enterCriticalSection();
 
-        uint16_t index = 0;
-    do {
-        Process *element = os_processes[index];
-
-        if (index < MAX_NUMBER_OF_PROCESSES) {
-            index += 1;
-        } else {
-            return INVALID_PROCESS
+    // Find empty process slot
+    ProcessID free_process_slot = 0;
+    while (os_getProcessSlot(free_process_slot)->state != OS_PS_UNUSED) {
+        free_process_slot++;
+        if (free_process_slot >= MAX_NUMBER_OF_PROCESSES) {
+            return INVALID_PROCESS;
         }
-        // TODO: fix check if element is empty or not
-        // loop while ellement is not empty and the maximum amount of processes has not been exceeded
-    } while (sizeof(&element) >= 0 && index < MAX_NUMBER_OF_PROCESSES);
+    }
 
     // if maximum amount of processes has been exceeded
 
@@ -137,17 +168,32 @@ ProcessID os_exec(Program *program, Priority priority) {
         return INVALID_PROCESS;
     }
 
-    element->program = program;
-    element->priority = priority;
-    element->state = OS_PS_READY;
-    element->sp = PROCESS_STACK_BOTTOM(index);
-    element->checksum = os_getStackChecksum(index);
+    Process *empty_process = os_getProcessSlot(free_process_slot);
 
-    // TODO: Processstack vorbereiten
+    empty_process->program = program;
+    empty_process->priority = priority;
+    empty_process->state = OS_PS_READY;
+
+    StackPointer stack_pointer;
+    stack_pointer.as_int = PROCESS_STACK_BOTTOM(free_process_slot);
+
+    uint16_t program_counter = (uint16_t)program;
+    *stack_pointer.as_ptr = (uint8_t)program_counter;
+    stack_pointer.as_ptr++;
+
+    *stack_pointer.as_ptr = (uint8_t)program_counter >> 8;
+    stack_pointer.as_ptr++;
+
+    for (int i = 0; i < 33; i++) {
+        *stack_pointer.as_ptr = 0x00;
+        stack_pointer.as_ptr++;
+    }
+    empty_process->sp = stack_pointer;
+    empty_process->checksum = os_getStackChecksum(free_process_slot);
 
     os_leaveCriticalSection();
 
-    return index;
+    return free_process_slot;
 }
 
 /*!
@@ -157,8 +203,8 @@ ProcessID os_exec(Program *program, Priority priority) {
  */
 void os_startScheduler(void) {
     currentProc = 0;
-    os_processes[currentProc]->state = OS_PS_RUNNING;
-    SP = os_processes[currentProc]->sp;
+    os_getProcessSlot(currentProc)->state = OS_PS_RUNNING;
+    SP = os_getProcessSlot(currentProc)->sp.as_int;
 
     restoreContext();
 }
@@ -168,12 +214,14 @@ void os_startScheduler(void) {
  *  initialize its internal data-structures and register.
  */
 void os_initScheduler(void) {
-    // TODO: idle process in slot 0 and not in autostart_head
     // loop through autostart list
-    ProcessID pid;
-    for (Program *node = autostart_head; node != NULL; node = node->next) {
-        pid = os_exec(node, DEFAULT_PRIORITY);
-        os_processes[pid]->state = OS_PS_READY;
+    ProcessID pid = 0;
+
+    struct program_linked_list_node initial_node = {.program = idle, .next = autostart_head};
+
+    for (struct program_linked_list_node *node = &initial_node; node != NULL; node = node->next) {
+        pid = os_exec(node->program, DEFAULT_PRIORITY);
+        os_processes[pid].state = OS_PS_READY;
     }
 }
 
@@ -228,7 +276,7 @@ void os_enterCriticalSection(void) {
     criticalSectionCount++;
 
     // TODO: OCIE2A bit im Register TIMSK2 auf 0 setzen
-    SREG |= global_interrupt_enable_bit
+    SREG |= global_interrupt_enable_bit;
 }
 
 /*!
@@ -240,7 +288,7 @@ void os_enterCriticalSection(void) {
 void os_leaveCriticalSection(void) {
     if (criticalSectionCount <= 0) {
         criticalSectionCount = 0;
-        return
+        return;
     }
     uint8_t global_interrupt_enable_bit = (SREG & (1 << 7)) >> SREG;
     SREG &= 0b10000000;
@@ -259,10 +307,17 @@ void os_leaveCriticalSection(void) {
  *  \return The checksum of the pid'th stack.
  */
 StackChecksum os_getStackChecksum(ProcessID pid) {
-    StackPointer bottom_pointer = PROCESS_STACK_BOTTOM(pid);
     StackPointer current_pointer = os_getProcessSlot(pid)->sp;
+    StackPointer initial_pointer = current_pointer;
 
-    StackChecksum checksum = current_pointer - bottom_pointer;
+    initial_pointer.as_ptr -= 35;
 
-    return checksum
+    StackChecksum checksum = *initial_pointer.as_ptr;
+
+    while (initial_pointer.as_ptr < current_pointer.as_ptr) {
+        checksum ^= *initial_pointer.as_ptr;
+        initial_pointer.as_ptr++;
+    }
+
+    return checksum;
 }

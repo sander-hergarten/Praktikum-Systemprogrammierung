@@ -11,8 +11,8 @@
 #ifndef _OS_SCHEDULING_STRATEGIES_H
 #define _OS_SCHEDULING_STRATEGIES_H
 
-#include "os_scheduler.h"
 #include "defines.h"
+#include "os_scheduler.h"
 
 //! Structure used to store specific scheduling informations such as a time slice
 // This is a presence task
@@ -38,4 +38,5 @@ ProcessID os_Scheduler_InactiveAging(Process const processes[], ProcessID curren
 //! RunToCompletion strategy
 ProcessID os_Scheduler_RunToCompletion(Process const processes[], ProcessID current);
 
+ProcessID find_next_ready_process(Process const processes[], ProcessID current, int direction);
 #endif

@@ -21,7 +21,7 @@ Everything that is necessary to get the input from the Buttons in a clean format
 uint8_t os_getInput(void) {
     uint8_t pinState_C1_C2 = (PINC & 0b00000011);
     uint8_t pinState_C3_C4 = (PINC >> 4) & 0b00001100;
-    return (~(pinState_C1_C2 | pinState_C3_C4) & bitmask);
+    return (~(pinState_C1_C2 | pinState_C3_C4) & 0b00001111);
 }
 /*!
  *  Initializes DDR and PORT for input
@@ -45,13 +45,6 @@ void os_waitForNoInput() {
 void os_waitForInput() {
     while (os_getInput() == 0)
         ;
-}
-
-void os_waitForInputOrTimeout(uint16_t timeout) {
-    while (os_getInput() == 0 && timeout > 0) {
-        timeout--;
-        delayMs(1);
-    }
 }
 
 void os_waitForCertainInput(uint8_t input) {
