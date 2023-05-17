@@ -38,4 +38,5 @@ ProcessID os_Scheduler_InactiveAging(Process const processes[], ProcessID curren
 //! RunToCompletion strategy
 ProcessID os_Scheduler_RunToCompletion(Process const processes[], ProcessID current);
 
+ProcessID find_next_ready_process(Process const processes[], ProcessID current, int direction);
 #endif
