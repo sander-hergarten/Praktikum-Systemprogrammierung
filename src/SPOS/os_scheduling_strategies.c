@@ -79,6 +79,8 @@ ProcessID os_Scheduler_Random(Process const processes[], ProcessID current) {
 
     if (result == 0) {
         result = find_next_ready_process(processes, result, 1);
+    } else {
+        result = 1;
     }
 
     return result;
