@@ -153,7 +153,7 @@ ProcessID os_exec(Program *program, Priority priority) {
     os_enterCriticalSection();
 
     // Find empty process slot
-    ProcessID free_process_slot;
+    ProcessID free_process_slot = 0;
     while (os_getProcessSlot(free_process_slot)->state != OS_PS_UNUSED) {
         free_process_slot++;
         if (free_process_slot >= MAX_NUMBER_OF_PROCESSES) {
