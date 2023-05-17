@@ -68,7 +68,7 @@ __attribute__((naked));
 ISR(TIMER2_COMPA_vect) {
     saveContext();
     os_getProcessSlot(currentProc)->sp.as_int = SP;
-    SP = BOTTOM_OF_ISR_STACK();
+    SP = BOTTOM_OF_ISR_STACK;
     os_getProcessSlot(currentProc)->state = OS_PS_READY;
     os_getProcessSlot(currentProc)->checksum = os_getStackChecksum(currentProc);
 
