@@ -35,4 +35,8 @@ void os_init(void);
 //! Shows error on display and terminates program
 void os_errorPStr(char const* str);
 
+void os_disableGlobalInterrupts(void);
+
+void os_enableGlobalInterrupts(void);
+
 #endif
