@@ -174,7 +174,8 @@ ProcessID os_exec(Program *program, Priority priority) {
     empty_process->priority = priority;
     empty_process->state = OS_PS_READY;
 
-    StackPointer stack_pointer = PROCESS_STACK_BOTTOM(free_process_slot);
+    StackPointer stack_pointer;
+    stack_pointer.as_int = PROCESS_STACK_BOTTOM(free_process_slot);
 
     *stack_pointer.as_ptr = (uint8_t)PC;
     stack_pointer.as_ptr++;
